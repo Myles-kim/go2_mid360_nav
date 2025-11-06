@@ -1,0 +1,18 @@
+# Initial joint positions for GO2 to stand properly
+# Based on nominal standing configuration
+
+lf_hip_joint: 0.0
+lf_upper_leg_joint: 0.7
+lf_lower_leg_joint: -1.4
+
+rf_hip_joint: 0.0
+rf_upper_leg_joint: 0.7
+rf_lower_leg_joint: -1.4
+
+lh_hip_joint: 0.0
+lh_upper_leg_joint: 0.7
+lh_lower_leg_joint: -1.4
+
+rh_hip_joint: 0.0
+rh_upper_leg_joint: 0.7
+rh_lower_leg_joint: -1.4

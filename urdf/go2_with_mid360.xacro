@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<robot name="go2_with_mid360" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Include go2 robot description -->
+    <xacro:include filename="$(find go2_description)/xacro/const.xacro"/>
+    <xacro:include filename="$(find go2_description)/xacro/materials.xacro"/>
+    <xacro:include filename="$(find go2_description)/xacro/leg.xacro"/>
+    <xacro:include filename="$(find go2_description)/xacro/gazebo.xacro"/>
+
+    <!-- Base link -->
+    <link name="base_link">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="floating_base" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="trunk"/>
+    </joint>
+
+    <!-- Trunk link -->
+    <link name="trunk">
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="file://$(find go2_description)/meshes/trunk.dae" scale="1 1 1"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="${trunk_length} ${trunk_width} ${trunk_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin rpy="0 0 0" xyz="${trunk_com_x} ${trunk_com_y} ${trunk_com_z}"/>
+            <mass value="${trunk_mass}"/>
+            <inertia
+                ixx="${trunk_ixx}" ixy="${trunk_ixy}" ixz="${trunk_ixz}"
+                iyy="${trunk_iyy}" iyz="${trunk_iyz}"
+                izz="${trunk_izz}"/>
+        </inertial>
+    </link>
+
+    <!-- IMU link -->
+    <joint name="imu_joint" type="fixed">
+        <parent link="trunk"/>
+        <child link="imu_link"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+    </joint>
+
+    <link name="imu_link">
+        <inertial>
+            <mass value="0.001"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size=".001 .001 .001"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Legs -->
+    <xacro:leg name="rf" mirror="-1" mirror_dae="False" front_hind="1"  front_hind_dae="True"  />
+    <xacro:leg name="lf" mirror="1"  mirror_dae="True"  front_hind="1"  front_hind_dae="True"  />
+    <xacro:leg name="rh" mirror="-1" mirror_dae="False" front_hind="-1" front_hind_dae="False" />
+    <xacro:leg name="lh" mirror="1"  mirror_dae="True"  front_hind="-1" front_hind_dae="False" />
+
+    <!-- Livox Mid360 Lidar -->
+    <joint name="livox_mid360_joint" type="fixed">
+        <parent link="trunk"/>
+        <child link="livox_mid360_link"/>
+        <!-- Mount on top of the robot, centered -->
+        <origin rpy="0 0 0" xyz="0.15 0.0 0.1"/>
+    </joint>
+
+    <link name="livox_mid360_link">
+        <inertial>
+            <mass value="0.265"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        </inertial>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.036" length="0.047"/>
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.036" length="0.047"/>
+            </geometry>
+            <material name="livox_grey">
+                <color rgba="0.3 0.3 0.35 1.0"/>
+            </material>
+        </visual>
+        <!-- Top disc -->
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.022"/>
+            <geometry>
+                <cylinder radius="0.036" length="0.003"/>
+            </geometry>
+            <material name="livox_dark">
+                <color rgba="0.15 0.15 0.15 1.0"/>
+            </material>
+        </visual>
+    </link>
+
+    <gazebo reference="livox_mid360_link">
+        <sensor type="ray" name="laser_livox">
+            <pose>0 0 0.02 0 0 0</pose>
+            <visualize>true</visualize>
+            <always_on>true</always_on>
+            <update_rate>10</update_rate>
+            <plugin name="gazebo_ros_laser_controller" filename="liblivox_laser_simulation_plugin.so">
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>100</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-3.1415926535897931</min_angle>
+                            <max_angle>3.1415926535897931</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>50</samples>
+                            <resolution>1</resolution>
+                            <min_angle>-3.1415926535897931</min_angle>
+                            <max_angle>3.1415926535897931</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.1</min>
+                        <max>40</max>
+                        <resolution>1</resolution>
+                    </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.0</stddev>
+                    </noise>
+                </ray>
+                <visualize>true</visualize>
+                <samples>24000</samples>
+                <downsample>1</downsample>
+                <csv_file_name>mid360-real-centr.csv</csv_file_name>
+                <publish_pointcloud_type>2</publish_pointcloud_type>
+                <ros_topic>/livox/lidar</ros_topic>
+                <frameName>livox_mid360_link</frameName>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+</robot>
