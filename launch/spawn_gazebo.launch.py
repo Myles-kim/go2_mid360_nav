@@ -17,10 +17,15 @@ def generate_launch_description():
 
     # 기존 경로를 보존하면서 Livox 플러그인만 추가
     existing_plugin_path = os.environ.get('GAZEBO_PLUGIN_PATH', '')
-    combined_plugin_path = (
-        f"{existing_plugin_path}:{livox_plugin_path}"
-        if existing_plugin_path else livox_plugin_path
-    )
+    default_plugin_path = '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins'
+    plugin_paths = [
+        path for path in [
+            existing_plugin_path,
+            livox_plugin_path,
+            default_plugin_path
+        ] if path
+    ]
+    combined_plugin_path = ":".join(dict.fromkeys(plugin_paths))
 
     # Set Gazebo plugin path to include livox plugin
     set_gazebo_plugin_path = SetEnvironmentVariable(
